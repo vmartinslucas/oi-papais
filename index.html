@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#7fb7a9">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Oi Papais">
+  <title>Oi Papais</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icone.svg">
+  <link rel="apple-touch-icon" href="icone-180.png">
+  <style>
+    :root {
+      --fundo: #fdf8f3;
+      --cartao: #ffffff;
+      --texto: #3d3a36;
+      --suave: #8a837a;
+      --linha: #eee6dc;
+      --menta: #7fb7a9;
+      --menta-escura: #5c9a8b;
+      --pessego: #f4a988;
+      --alerta: #e0795a;
+      --raio: 14px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --fundo: #1d1b19;
+        --cartao: #2a2724;
+        --texto: #f1ece6;
+        --suave: #a39b91;
+        --linha: #3a3632;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--fundo);
+      color: var(--texto);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .oculto { display: none !important; }
+    main {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: calc(env(safe-area-inset-top) + 12px) 16px calc(90px + env(safe-area-inset-bottom));
+    }
+    h1 { font-size: 26px; margin: 8px 0 4px; }
+    h2 { font-size: 18px; margin: 0; }
+    .subtitulo { color: var(--suave); margin: 0 0 16px; font-size: 14px; }
+    .cartao {
+      background: var(--cartao);
+      border-radius: var(--raio);
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    }
+    input, select, textarea, button { font: inherit; }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--linha);
+      border-radius: 10px;
+      background: var(--fundo);
+      color: var(--texto);
+    }
+    label { display: block; font-size: 13px; color: var(--suave); margin: 10px 0 4px; }
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 11px 14px;
+      background: var(--menta);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button.secundario { background: var(--linha); color: var(--texto); }
+    button.perigo { background: transparent; color: var(--alerta); }
+    .linha-botoes { display: flex; gap: 8px; margin-top: 14px; }
+    .linha-botoes button { flex: 1; }
+    .erro { color: var(--alerta); font-size: 14px; }
+
+    /* Login */
+    #tela-login, #tela-sem-config { max-width: 380px; margin: 15vh auto 0; padding: 0 20px; text-align: center; }
+    #tela-login form { text-align: left; }
+
+    /* Semana */
+    .semana {
+      background: linear-gradient(135deg, var(--menta), var(--menta-escura));
+      color: white;
+    }
+    .semana strong { font-size: 22px; display: block; }
+    .semana span { opacity: 0.9; font-size: 14px; }
+
+    /* Fases */
+    details.fase { padding: 0; overflow: hidden; }
+    details.fase summary {
+      list-style: none;
+      padding: 14px 16px;
+      cursor: pointer;
+    }
+    details.fase summary::-webkit-details-marker { display: none; }
+    .fase-topo { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .fase-semanas { color: var(--suave); font-size: 13px; }
+    .fase-resumo { color: var(--suave); font-size: 13px; margin: 6px 0 0; }
+    .etiqueta {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+    .etiqueta.agora { background: var(--menta); color: white; }
+    .etiqueta.atrasada { background: var(--alerta); color: white; }
+    .etiqueta.ok { background: var(--linha); color: var(--suave); }
+    .barra { height: 6px; background: var(--linha); border-radius: 6px; margin-top: 10px; overflow: hidden; }
+    .barra > div { height: 100%; background: var(--menta); border-radius: 6px; }
+    .barra.estourou > div { background: var(--alerta); }
+
+    /* Itens */
+    .item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      border-top: 1px solid var(--linha);
+      cursor: pointer;
+    }
+    .marcador {
+      flex: none;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 2px solid var(--menta);
+      background: transparent;
+      padding: 0;
+      color: white;
+      font-size: 14px;
+      line-height: 22px;
+    }
+    .marcador.cheio { background: var(--menta); }
+    .marcador.parcial { background: linear-gradient(90deg, var(--menta) 50%, transparent 50%); }
+    .item-texto { flex: 1; min-width: 0; }
+    .item-nome { display: block; }
+    .item-icone { margin-right: 6px; }
+    .item.completo .item-nome { color: var(--suave); text-decoration: line-through; }
+    .item-detalhe { color: var(--suave); font-size: 12px; }
+    .prio-essencial { color: var(--alerta); }
+    .vazio-lista { color: var(--suave); font-size: 14px; padding: 10px 16px; border-top: 1px solid var(--linha); }
+
+    /* Filtros */
+    .filtros { display: flex; gap: 8px; margin-bottom: 12px; }
+    .categoria-titulo { padding: 14px 16px 6px; font-weight: 700; }
+
+    /* Resumo */
+    .numero-grande { font-size: 28px; font-weight: 700; }
+    .linha-resumo { display: flex; justify-content: space-between; padding: 6px 0; border-top: 1px solid var(--linha); font-size: 14px; }
+    .linha-resumo:first-of-type { border-top: none; }
+
+    /* Navegação */
+    nav {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      display: flex;
+      background: var(--cartao);
+      border-top: 1px solid var(--linha);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    nav button {
+      flex: 1;
+      background: none;
+      color: var(--suave);
+      border-radius: 0;
+      padding: 10px 0 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    nav button .icone-aba { display: block; font-size: 20px; margin-bottom: 2px; }
+    nav button.ativa { color: var(--menta-escura); }
+
+    /* Diálogo do item */
+    dialog {
+      border: none;
+      border-radius: var(--raio);
+      padding: 18px;
+      width: min(520px, 94vw);
+      background: var(--cartao);
+      color: var(--texto);
+    }
+    dialog::backdrop { background: rgba(0, 0, 0, 0.35); }
+    .contador { display: flex; align-items: center; gap: 12px; }
+    .contador button { width: 44px; padding: 8px 0; font-size: 20px; }
+    .contador span { font-size: 18px; font-weight: 700; min-width: 70px; text-align: center; }
+    .dica { background: var(--fundo); border-radius: 10px; padding: 10px 12px; font-size: 14px; margin-top: 10px; }
+    .duas-colunas { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    /* Onde comprar */
+    h3 { font-size: 15px; margin: 18px 0 6px; }
+    .links-busca { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+    .links-busca a {
+      font-size: 12px;
+      padding: 5px 10px;
+      border-radius: 20px;
+      background: var(--fundo);
+      border: 1px solid var(--linha);
+      color: var(--texto);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .oferta { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+    .oferta-loja { flex: 1; min-width: 0; }
+    .oferta-preco { font-weight: 700; }
+    .oferta.melhor .oferta-preco { color: var(--menta-escura); }
+    .promo { background: var(--pessego); color: white; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 10px; }
+    .melhor-selo { background: var(--menta); color: white; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 10px; }
+    .oferta button.remover { background: none; color: var(--suave); padding: 2px 6px; font-size: 16px; }
+    .economia { color: var(--menta-escura); font-weight: 600; }
+    .item .links-busca { margin-top: 6px; }
+
+    /* Cards da aba Comprar */
+    .card-oferta { padding: 16px; cursor: pointer; transition: transform 0.1s; }
+    .card-oferta:active { transform: scale(0.985); }
+    .card-oferta.completo { opacity: 0.6; }
+    .card-topo { display: flex; align-items: center; gap: 12px; }
+    .card-icone {
+      flex: none;
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: var(--fundo);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+    }
+    .card-titulo { flex: 1; min-width: 0; }
+    .card-titulo strong { display: block; font-size: 16px; }
+    .card-preco-linha { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+    .card-rotulo { color: var(--suave); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .card-preco { font-size: 28px; font-weight: 800; color: var(--menta-escura); }
+    .card-loja { font-size: 15px; }
+    .card-loja a, .oferta-loja a { color: var(--menta-escura); font-weight: 600; text-decoration: none; }
+    .pill-economia {
+      display: inline-block;
+      margin-top: 10px;
+      background: rgba(127, 183, 169, 0.18);
+      color: var(--menta-escura);
+      font-weight: 700;
+      font-size: 13px;
+      padding: 5px 12px;
+      border-radius: 20px;
+    }
+    .outras-ofertas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .outras-ofertas span {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: var(--fundo);
+      color: var(--suave);
+    }
+    .card-rodape { color: var(--suave); font-size: 12px; margin-top: 10px; }
+    .card-oferta .links-busca { margin-top: 12px; gap: 8px; }
+    .card-oferta .links-busca a { font-size: 13px; padding: 8px 12px; background: var(--fundo); }
+
+    /* Ofertas dentro do item */
+    .oferta {
+      border: 1px solid var(--linha);
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-top: 8px;
+    }
+    .oferta.melhor { border: 2px solid var(--menta); background: rgba(127, 183, 169, 0.08); }
+    .oferta-preco { font-size: 17px; }
+    .oferta button.comprei { background: var(--menta); color: white; font-size: 12px; padding: 6px 10px; }
+    .bloco-compra { background: var(--fundo); border-radius: 12px; padding: 12px; margin-top: 12px; }
+    .bloco-compra input, .bloco-compra select { background: var(--cartao); }
+    .campo-destaque { font-size: 22px; font-weight: 700; color: var(--menta-escura); }
+
+    /* Jornada: céu -> barriga -> casa */
+    .jornada { position: relative; height: 74px; margin: 16px 6px 0; }
+    .jornada-linha {
+      position: absolute;
+      left: 18px; right: 18px; top: 20px;
+      border-top: 2px dashed rgba(255, 255, 255, 0.45);
+    }
+    .parada { position: absolute; top: 0; transform: translateX(-50%); text-align: center; width: 74px; z-index: 1; }
+    .parada .emoji { font-size: 30px; line-height: 40px; display: block; }
+    .parada small { font-size: 11px; opacity: 0.9; display: block; line-height: 1.2; }
+    .parada.ceu { left: 18px; }
+    .parada.barriga { left: 50%; }
+    .parada.casa { left: calc(100% - 18px); }
+    .pegada {
+      position: absolute;
+      width: 15px;
+      height: 20px;
+      opacity: 0;
+      animation: andar var(--duracao) linear infinite;
+      animation-delay: var(--atraso);
+    }
+    .pegada svg { width: 100%; height: 100%; fill: white; }
+    @keyframes andar {
+      0% { opacity: 0; }
+      4% { opacity: 1; }
+      70% { opacity: 1; }
+      85%, 100% { opacity: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .pegada { animation: none; opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div id="tela-sem-config" class="oculto">
+    <h1>Oi Papais</h1>
+    <p class="subtitulo">Falta configurar o Firebase. Preencha o arquivo <code>firebase-config.js</code> com os dados do projeto.</p>
+  </div>
+
+  <div id="tela-login" class="oculto">
+    <h1>Oi Papais</h1>
+    <p class="subtitulo">A trilha do enxoval do nosso bebê</p>
+    <form id="form-login" class="cartao">
+      <label for="login-email">E-mail</label>
+      <input id="login-email" type="email" autocomplete="email" required>
+      <label for="login-senha">Senha</label>
+      <input id="login-senha" type="password" autocomplete="current-password" required>
+      <p id="login-erro" class="erro"></p>
+      <button type="submit" style="width: 100%">Entrar</button>
+    </form>
+  </div>
+
+  <div id="tela-app" class="oculto">
+    <main>
+      <p id="erro-geral" class="erro oculto"></p>
+
+      <section id="aba-trilha">
+        <h1>Oi Papais</h1>
+        <p class="subtitulo">A trilha do enxoval, fase por fase</p>
+        <div id="cartao-semana" class="cartao semana"></div>
+        <div id="cartao-comecar" class="cartao oculto">
+          <h2>Vamos começar?</h2>
+          <p class="subtitulo" style="margin-top: 6px">Carregue a lista sugerida com cerca de 80 itens, organizada por fase da gravidez. Depois vocês ajustam do jeito de vocês.</p>
+          <button id="botao-carregar-guia">Começar com o guia sugerido</button>
+        </div>
+        <div id="lista-fases"></div>
+      </section>
+
+      <section id="aba-lista" class="oculto">
+        <h1>Lista completa</h1>
+        <p class="subtitulo">Tudo por categoria</p>
+        <div class="filtros">
+          <select id="filtro-status">
+            <option value="falta">Falta comprar</option>
+            <option value="comprados">Comprados / feitos</option>
+            <option value="todos">Todos</option>
+          </select>
+          <select id="filtro-prioridade">
+            <option value="">Qualquer prioridade</option>
+            <option value="essencial">Essenciais</option>
+            <option value="útil">Úteis</option>
+            <option value="opcional">Opcionais</option>
+          </select>
+        </div>
+        <div id="lista-categorias"></div>
+      </section>
+
+      <section id="aba-comprar" class="oculto">
+        <h1>Onde comprar</h1>
+        <p class="subtitulo">Ofertas que vocês anotaram, da maior economia para a menor. Os preços não se atualizam sozinhos: confira a data de cada oferta.</p>
+        <div class="filtros">
+          <select id="filtro-comprar">
+            <option value="com-ofertas">Com ofertas anotadas</option>
+            <option value="pesquisar">Falta pesquisar</option>
+          </select>
+          <input id="busca-comprar" type="search" placeholder="Buscar item">
+        </div>
+        <div id="lista-comprar"></div>
+      </section>
+
+      <section id="aba-resumo" class="oculto">
+        <h1>Resumo</h1>
+        <p class="subtitulo">Gastos e progresso</p>
+        <div id="conteudo-resumo"></div>
+      </section>
+
+      <section id="aba-ajustes" class="oculto">
+        <h1>Ajustes</h1>
+        <p class="subtitulo" id="usuario-logado"></p>
+        <form id="form-ajustes" class="cartao">
+          <h2>Nossa família</h2>
+          <label for="ajuste-nome">Seu nome (aparece em "quem comprou")</label>
+          <input id="ajuste-nome" maxlength="40">
+          <label for="ajuste-dpp">Data prevista do parto</label>
+          <input id="ajuste-dpp" type="date">
+          <label for="ajuste-orcamento">Orçamento do enxoval (R$)</label>
+          <input id="ajuste-orcamento" type="number" min="0" step="50" inputmode="decimal">
+          <div class="linha-botoes"><button type="submit">Salvar</button></div>
+          <p id="ajustes-msg" class="subtitulo" style="margin: 8px 0 0"></p>
+        </form>
+        <form id="form-novo" class="cartao">
+          <h2>Adicionar item</h2>
+          <label for="novo-nome">Nome</label>
+          <input id="novo-nome" required maxlength="80">
+          <div class="duas-colunas">
+            <div>
+              <label for="novo-categoria">Categoria</label>
+              <select id="novo-categoria"></select>
+            </div>
+            <div>
+              <label for="novo-fase">Fase</label>
+              <select id="novo-fase"></select>
+            </div>
+          </div>
+          <div class="duas-colunas">
+            <div>
+              <label for="novo-quantidade">Quantidade</label>
+              <input id="novo-quantidade" type="number" min="1" value="1" inputmode="numeric">
+            </div>
+            <div>
+              <label for="novo-prioridade">Prioridade</label>
+              <select id="novo-prioridade">
+                <option value="essencial">Essencial</option>
+                <option value="útil" selected>Útil</option>
+                <option value="opcional">Opcional</option>
+              </select>
+            </div>
+          </div>
+          <div class="linha-botoes"><button type="submit">Adicionar</button></div>
+        </form>
+        <div class="cartao">
+          <button id="botao-sair" class="secundario" style="width: 100%">Sair</button>
+        </div>
+      </section>
+    </main>
+
+    <nav>
+      <button data-aba="trilha" class="ativa"><span class="icone-aba">🧭</span>Trilha</button>
+      <button data-aba="lista"><span class="icone-aba">📋</span>Lista</button>
+      <button data-aba="comprar"><span class="icone-aba">🛒</span>Comprar</button>
+      <button data-aba="resumo"><span class="icone-aba">📊</span>Resumo</button>
+      <button data-aba="ajustes"><span class="icone-aba">⚙️</span>Ajustes</button>
+    </nav>
+  </div>
+
+  <dialog id="dialogo-item">
+    <form id="form-item" method="dialog">
+      <label for="item-nome">Item</label>
+      <input id="item-nome" required maxlength="80">
+
+      <div id="bloco-quantidade" class="bloco-compra">
+        <h3 style="margin-top: 0">✅ Compra</h3>
+        <label>Quantos já compraram</label>
+        <div class="contador">
+          <button type="button" class="secundario" id="item-menos">−</button>
+          <span id="item-contagem"></span>
+          <button type="button" class="secundario" id="item-mais">+</button>
+        </div>
+        <label for="item-preco">Valor pago no total (R$)</label>
+        <input id="item-preco" class="campo-destaque" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0,00">
+        <label for="item-quem">Quem comprou</label>
+        <select id="item-quem"></select>
+        <p id="item-aviso" class="economia oculto" style="margin: 8px 0 0; font-size: 13px"></p>
+      </div>
+
+      <div id="bloco-tarefa">
+        <label><input id="item-feito" type="checkbox" style="width: auto"> Feito</label>
+      </div>
+
+      <label for="item-sugerida" id="rotulo-sugerida">Quantidade sugerida</label>
+      <input id="item-sugerida" type="number" min="1" inputmode="numeric">
+      <label for="item-link">Link da loja</label>
+      <input id="item-link" type="url" placeholder="https://">
+      <label for="item-obs">Observações (marca, tamanho, cor...)</label>
+      <textarea id="item-obs" rows="2" maxlength="500"></textarea>
+      <div id="item-dica" class="dica"></div>
+      <p id="item-link-abrir" class="oculto" style="margin: 10px 0 0; font-size: 14px"></p>
+
+      <div id="bloco-ofertas">
+        <h3>🛒 Onde comprar</h3>
+        <div class="item-detalhe">Pesquisar em:</div>
+        <div id="item-links-busca" class="links-busca"></div>
+        <div id="item-ofertas"></div>
+        <div class="duas-colunas">
+          <div>
+            <label for="oferta-loja">Loja</label>
+            <input id="oferta-loja" list="lojas-comuns" maxlength="40">
+          </div>
+          <div>
+            <label for="oferta-preco">Preço (R$)</label>
+            <input id="oferta-preco" type="number" min="0" step="0.01" inputmode="decimal">
+          </div>
+        </div>
+        <label for="oferta-link">Link da oferta</label>
+        <input id="oferta-link" type="url" placeholder="https://">
+        <label><input id="oferta-promo" type="checkbox" style="width: auto"> Está em promoção</label>
+        <p id="oferta-erro" class="erro" style="margin: 4px 0 0"></p>
+        <button type="button" class="secundario" id="oferta-adicionar" style="width: 100%; margin-top: 8px">Anotar oferta</button>
+      </div>
+      <datalist id="lojas-comuns">
+        <option value="Amazon"><option value="Mercado Livre"><option value="Magalu">
+        <option value="Shopee"><option value="Americanas"><option value="Casas Bahia">
+        <option value="Loja física">
+      </datalist>
+
+      <div class="linha-botoes">
+        <button type="button" class="perigo" id="item-apagar">Apagar</button>
+        <button type="button" class="secundario" id="item-fechar">Fechar</button>
+        <button type="submit" id="item-salvar">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut,
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getFirestore, collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc,
+      setDoc, writeBatch, serverTimestamp,
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { firebaseConfig } from "./firebase-config.js";
+    import { FASES, CATEGORIAS, ICONES_CATEGORIA, GUIA } from "./guia.js";
+    import {
+      semanaGestacional, faseDaSemana, itemCompleto, progresso,
+      fasesAtrasadas, totalGasto, itemDoGuia, resumoOfertas, linksDeBusca,
+    } from "./logica.js";
+
+    const $ = (id) => document.getElementById(id);
+
+    if (firebaseConfig.apiKey === "COLE_AQUI") {
+      $("tela-sem-config").classList.remove("oculto");
+      throw new Error("firebase-config.js ainda não foi preenchido");
+    }
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const colecaoItens = collection(db, "itens");
+    const docFamilia = doc(db, "config", "familia");
+
+    let itens = [];
+    let familia = {};
+    let usuario = null;
+    let carregouItens = false;
+    let pararItens = null;
+    let pararFamilia = null;
+    let itemAberto = null;
+    let contagemAberta = 0;
+    // Fases que o usuário deixou abertas; sobrevive aos redesenhos causados pela sincronização.
+    let fasesAbertas = null;
+    let ultimaFaseAtual = null;
+
+    function escapar(texto) {
+      return String(texto ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    function reais(valor) {
+      return (Number(valor) || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    }
+
+    function nomeDe(chave) {
+      if (!chave) return "";
+      if (chave === "presente") return "Presente";
+      return (familia.nomes || {})[chave] || chave.split("@")[0];
+    }
+
+    // ---------- Login ----------
+
+    onAuthStateChanged(auth, (u) => {
+      usuario = u;
+      if (u) {
+        $("tela-login").classList.add("oculto");
+        $("tela-app").classList.remove("oculto");
+        $("usuario-logado").textContent = "Conectado como " + u.email;
+        comecarAOuvir();
+      } else {
+        if (pararItens) pararItens();
+        if (pararFamilia) pararFamilia();
+        $("tela-app").classList.add("oculto");
+        $("tela-login").classList.remove("oculto");
+      }
+    });
+
+    $("form-login").onsubmit = async (evento) => {
+      evento.preventDefault();
+      $("login-erro").textContent = "";
+      try {
+        await signInWithEmailAndPassword(auth, $("login-email").value.trim(), $("login-senha").value);
+      } catch (erro) {
+        $("login-erro").textContent = "Não foi possível entrar. Confira o e-mail e a senha.";
+      }
+    };
+
+    $("botao-sair").onclick = () => signOut(auth);
+
+    function mostrarErro(erro) {
+      const el = $("erro-geral");
+      el.textContent = "Não foi possível abrir o enxoval (" + (erro.code || erro.message) + "). " +
+        "Confira se o e-mail " + (usuario ? usuario.email : "") + " está na lista das regras do Firebase.";
+      el.classList.remove("oculto");
+    }
+
+    function comecarAOuvir() {
+      carregouItens = false;
+      pararItens = onSnapshot(colecaoItens, (resultado) => {
+        itens = resultado.docs.map((d) => ({ id: d.id, ...d.data() }));
+        carregouItens = true;
+        $("erro-geral").classList.add("oculto");
+        desenharTudo();
+      }, mostrarErro);
+      pararFamilia = onSnapshot(docFamilia, (resultado) => {
+        familia = resultado.exists() ? resultado.data() : {};
+        preencherAjustes();
+        desenharTudo();
+      }, mostrarErro);
+    }
+
+    // ---------- Ações ----------
+
+    $("botao-carregar-guia").onclick = async () => {
+      if (itens.length > 0) return;
+      const botao = $("botao-carregar-guia");
+      botao.disabled = true;
+      botao.textContent = "Carregando...";
+      const lote = writeBatch(db);
+      GUIA.forEach((modelo, ordem) => {
+        lote.set(doc(colecaoItens), { ...itemDoGuia(modelo, ordem), atualizadoEm: serverTimestamp() });
+      });
+      try {
+        await lote.commit();
+      } catch (erro) {
+        mostrarErro(erro);
+        botao.disabled = false;
+        botao.textContent = "Começar com o guia sugerido";
+      }
+    };
+
+    function alternarItem(item) {
+      if (item.tarefa) {
+        updateDoc(doc(db, "itens", item.id), { feito: !item.feito, atualizadoEm: serverTimestamp() });
+        return;
+      }
+      const completo = itemCompleto(item);
+      const mudancas = { quantidadeComprada: completo ? 0 : item.quantidadeSugerida, atualizadoEm: serverTimestamp() };
+      if (!completo && !item.compradoPor) mudancas.compradoPor = usuario.email;
+      updateDoc(doc(db, "itens", item.id), mudancas);
+    }
+
+    // ---------- Desenho ----------
+
+    function desenharTudo() {
+      if (!carregouItens) return;
+      desenharSemana();
+      desenharTrilha();
+      desenharLista();
+      desenharComprar();
+      desenharResumo();
+      if (itemAberto && $("dialogo-item").open) {
+        itemAberto = itens.find((i) => i.id === itemAberto.id) || itemAberto;
+        desenharOfertasDoItem();
+      }
+    }
+
+    function semanaAtual() {
+      return semanaGestacional(familia.dpp || "");
+    }
+
+    const PEGADA_SVG = '<svg viewBox="0 0 12 16" aria-hidden="true"><ellipse cx="6" cy="10.5" rx="3.6" ry="5"/>' +
+      '<circle cx="3" cy="3.6" r="1.3"/><circle cx="5.4" cy="2.4" r="1.35"/><circle cx="7.8" cy="2.7" r="1.15"/><circle cx="9.6" cy="4" r="0.95"/></svg>';
+
+    // Pezinhos andando do céu até a casa; param no ponto que corresponde à semana de gestação.
+    function htmlJornada(semana) {
+      const andado = semana === null || semana > 40 ? 1 : Math.max(semana, 0) / 40;
+      const passos = Math.max(3, Math.round(andado * 14));
+      const duracao = passos * 0.3 + 2.5;
+      const pegadas = Array.from({ length: passos }, (_, i) => {
+        const fracao = (andado * (i + 1) / passos).toFixed(3);
+        const pePar = i % 2 === 1;
+        return `<span class="pegada" style="left: calc(18px + (100% - 36px) * ${fracao} - 8px); top: ${pePar ? 18 : 4}px;` +
+          ` transform: rotate(90deg)${pePar ? " scaleX(-1)" : ""}; --duracao: ${duracao}s; --atraso: ${(i * 0.3).toFixed(1)}s">${PEGADA_SVG}</span>`;
+      }).join("");
+      return `<div class="jornada" role="img" aria-label="Jornada do bebê: céu, barriga da mamãe, casa com os papais">
+        <div class="jornada-linha"></div>
+        ${pegadas}
+        <div class="parada ceu"><span class="emoji">☁️</span><small>Céu</small></div>
+        <div class="parada barriga"><span class="emoji">🤰</span><small>Barriga da mamãe</small></div>
+        <div class="parada casa"><span class="emoji">🏡</span><small>Casa com os papais</small></div>
+      </div>`;
+    }
+
+    function desenharSemana() {
+      const semana = semanaAtual();
+      const cartao = $("cartao-semana");
+      let texto;
+      if (semana === null) {
+        texto = "<strong>Quando o bebê chega?</strong><span>Informe a data prevista do parto em Ajustes para a trilha mostrar a fase de vocês.</span>";
+      } else if (semana > 40) {
+        texto = "<strong>O bebê já deve ter chegado! 💛</strong><span>Agora é a hora dos itens que podiam esperar.</span>";
+      } else {
+        const fase = FASES.find((f) => f.id === faseDaSemana(semana, FASES));
+        const faltam = 40 - Math.max(semana, 0);
+        texto = `<strong>Semana ${Math.max(semana, 1)} de gestação</strong>` +
+          `<span>Fase: ${escapar(fase.nome)} · faltam cerca de ${faltam} semanas</span>`;
+      }
+      const chave = String(semana);
+      if (cartao.dataset.semana === chave) return;
+      cartao.dataset.semana = chave;
+      cartao.innerHTML = texto + htmlJornada(semana);
+    }
+
+    function htmlItem(item) {
+      const completo = itemCompleto(item);
+      const comprada = item.quantidadeComprada || 0;
+      let classeMarcador = "";
+      if (completo) classeMarcador = "cheio";
+      else if (!item.tarefa && comprada > 0) classeMarcador = "parcial";
+      const detalhes = [];
+      if (item.tarefa) detalhes.push("tarefa");
+      else detalhes.push(`${comprada}/${item.quantidadeSugerida}${item.unidade ? " " + escapar(item.unidade) : ""}`);
+      if (item.prioridade === "essencial") detalhes.push('<span class="prio-essencial">essencial</span>');
+      else if (item.prioridade) detalhes.push(escapar(item.prioridade));
+      if (item.compradoPor) detalhes.push(escapar(nomeDe(item.compradoPor)));
+      if (item.preco) detalhes.push(reais(item.preco));
+      return `<div class="item${completo ? " completo" : ""}" data-id="${item.id}">
+        <button class="marcador ${classeMarcador}" data-marcar="${item.id}" aria-label="Marcar">${completo ? "✓" : ""}</button>
+        <div class="item-texto">
+          <span class="item-nome"><span class="item-icone">${ICONES_CATEGORIA[item.categoria] || "🔹"}</span>${escapar(item.nome)}</span>
+          <span class="item-detalhe">${detalhes.join(" · ")}</span>
+        </div>
+      </div>`;
+    }
+
+    function ordenar(lista) {
+      const peso = { "essencial": 0, "útil": 1, "opcional": 2 };
+      return lista.slice().sort((a, b) =>
+        (itemCompleto(a) - itemCompleto(b)) ||
+        ((peso[a.prioridade] ?? 3) - (peso[b.prioridade] ?? 3)) ||
+        ((a.ordem ?? 999) - (b.ordem ?? 999)) ||
+        a.nome.localeCompare(b.nome));
+    }
+
+    function desenharTrilha() {
+      $("cartao-comecar").classList.toggle("oculto", itens.length > 0);
+      const semana = semanaAtual();
+      const atual = faseDaSemana(semana, FASES);
+      const atrasadas = fasesAtrasadas(itens, semana, FASES);
+      if (fasesAbertas === null) {
+        fasesAbertas = new Set(atrasadas);
+        if (atual) fasesAbertas.add(atual);
+        if (semana === null) fasesAbertas.add("planejamento");
+      } else if (atual && atual !== ultimaFaseAtual) {
+        fasesAbertas.add(atual);
+      }
+      ultimaFaseAtual = atual;
+      $("lista-fases").innerHTML = itens.length === 0 ? "" : FASES.map((fase) => {
+        const daFase = itens.filter((i) => i.fase === fase.id);
+        const p = progresso(daFase);
+        let etiqueta = "";
+        if (fase.id === atual) etiqueta = '<span class="etiqueta agora">Agora</span>';
+        else if (atrasadas.includes(fase.id)) etiqueta = '<span class="etiqueta atrasada">Pendências</span>';
+        else if (p.total && p.completos === p.total) etiqueta = '<span class="etiqueta ok">Concluída</span>';
+        const aberta = fasesAbertas.has(fase.id);
+        const semanas = fase.semanas ? `semanas ${fase.semanas[0]}–${fase.semanas[1]}` : "depois do nascimento";
+        const corpo = daFase.length ? ordenar(daFase).map(htmlItem).join("") : '<div class="vazio-lista">Nenhum item nesta fase.</div>';
+        return `<details class="cartao fase" data-fase="${fase.id}"${aberta ? " open" : ""}>
+          <summary>
+            <div class="fase-topo"><h2>${fase.icone} ${escapar(fase.nome)}</h2>${etiqueta}</div>
+            <div class="fase-semanas">${semanas} · ${p.completos} de ${p.total}</div>
+            <p class="fase-resumo">${escapar(fase.resumo)}</p>
+            <div class="barra"><div style="width: ${p.pct}%"></div></div>
+          </summary>
+          ${corpo}
+        </details>`;
+      }).join("");
+    }
+
+    function desenharLista() {
+      const status = $("filtro-status").value;
+      const prioridade = $("filtro-prioridade").value;
+      const filtrados = itens.filter((i) => {
+        if (prioridade && i.prioridade !== prioridade) return false;
+        if (status === "falta") return !itemCompleto(i);
+        if (status === "comprados") return itemCompleto(i);
+        return true;
+      });
+      const categorias = [...CATEGORIAS, ...new Set(itens.map((i) => i.categoria).filter((c) => !CATEGORIAS.includes(c)))];
+      const html = categorias.map((categoria) => {
+        const daCategoria = filtrados.filter((i) => i.categoria === categoria);
+        if (!daCategoria.length) return "";
+        return `<div class="cartao" style="padding: 0">
+          <div class="categoria-titulo">${ICONES_CATEGORIA[categoria] || "🔹"} ${escapar(categoria)} <span class="item-detalhe">(${daCategoria.length})</span></div>
+          ${ordenar(daCategoria).map(htmlItem).join("")}
+        </div>`;
+      }).join("");
+      $("lista-categorias").innerHTML = html || '<div class="cartao subtitulo" style="margin: 0">Nada por aqui com esses filtros.</div>';
+    }
+
+    function dataBr(iso) {
+      if (!iso) return "";
+      const [, mes, dia] = iso.split("-");
+      return `${dia}/${mes}`;
+    }
+
+    function hojeIso() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    }
+
+    function htmlLinksBusca(nome) {
+      return `<div class="links-busca">${linksDeBusca(nome).map((l) =>
+        `<a href="${escapar(l.url)}" target="_blank" rel="noopener">${escapar(l.loja)} ↗</a>`).join("")}</div>`;
+    }
+
+    function desenharComprar() {
+      const modo = $("filtro-comprar").value;
+      const busca = $("busca-comprar").value.trim().toLowerCase();
+      const visiveis = itens.filter((i) => !i.tarefa && (!busca || i.nome.toLowerCase().includes(busca)));
+      let html = "";
+      if (modo === "com-ofertas") {
+        const comOfertas = visiveis
+          .map((i) => ({ item: i, resumo: resumoOfertas(i.ofertas) }))
+          .filter((x) => x.resumo)
+          .sort((a, b) => b.resumo.economia - a.resumo.economia || a.item.nome.localeCompare(b.item.nome));
+        html = comOfertas.map(({ item, resumo }) => {
+          const { melhor, pior, economia, quantidade } = resumo;
+          const completo = itemCompleto(item);
+          const loja = melhor.link
+            ? `<a href="${escapar(melhor.link)}" target="_blank" rel="noopener">${escapar(melhor.loja)} ↗</a>`
+            : escapar(melhor.loja);
+          const outras = (item.ofertas || [])
+            .filter((o) => Number(o.preco) > 0 && o !== melhor)
+            .sort((a, b) => Number(a.preco) - Number(b.preco))
+            .map((o) => `<span>${escapar(o.loja)} ${reais(o.preco)}</span>`).join("");
+          return `<div class="cartao card-oferta${completo ? " completo" : ""}" data-abrir="${item.id}">
+            <div class="card-topo">
+              <div class="card-icone">${ICONES_CATEGORIA[item.categoria] || "🔹"}</div>
+              <div class="card-titulo">
+                <strong>${escapar(item.nome)}</strong>
+                <span class="item-detalhe">${escapar(item.categoria)}${completo ? " · já comprado" : ""}</span>
+              </div>
+              ${melhor.promocao ? '<span class="promo">🔥 promoção</span>' : ""}
+            </div>
+            <div class="card-preco-linha"><span class="card-rotulo">Melhor preço</span></div>
+            <div class="card-preco-linha" style="margin-top: 0">
+              <span class="card-preco">${reais(melhor.preco)}</span>
+              <span class="card-loja">na ${loja}</span>
+            </div>
+            ${economia > 0 ? `<span class="pill-economia">Economize ${reais(economia)} vs ${escapar(pior.loja)}</span>` : ""}
+            ${outras ? `<div class="outras-ofertas">${outras}</div>` : ""}
+            <div class="card-rodape">${quantidade} ${quantidade === 1 ? "oferta" : "ofertas"} · melhor anotada em ${dataBr(melhor.data)}${quantidade === 1 ? " · anote outra loja para comparar" : ""}</div>
+          </div>`;
+        }).join("")
+          || '<div class="cartao subtitulo" style="margin: 0">Nenhuma oferta anotada ainda. Abra um item (ou use "Falta pesquisar") para pesquisar nas lojas e anotar os preços.</div>';
+      } else {
+        const faltam = ordenar(visiveis.filter((i) => !itemCompleto(i) && !resumoOfertas(i.ofertas)));
+        html = faltam.map((item) => `<div class="cartao card-oferta" data-abrir="${item.id}">
+            <div class="card-topo">
+              <div class="card-icone">${ICONES_CATEGORIA[item.categoria] || "🔹"}</div>
+              <div class="card-titulo">
+                <strong>${escapar(item.nome)}</strong>
+                <span class="item-detalhe">Precisa de ${item.quantidadeSugerida}${item.unidade ? " " + escapar(item.unidade) : ""} · ${escapar(item.prioridade || "")}</span>
+              </div>
+            </div>
+            ${htmlLinksBusca(item.nome)}
+          </div>`).join("")
+          || '<div class="cartao subtitulo" style="margin: 0">Todos os itens pendentes já têm oferta anotada. 🎉</div>';
+      }
+      $("lista-comprar").innerHTML = html;
+    }
+
+    function desenharOfertasDoItem() {
+      const ofertas = (itemAberto.ofertas || []).map((o, indice) => ({ ...o, indice }));
+      const resumo = resumoOfertas(ofertas);
+      ofertas.sort((a, b) => (Number(a.preco) || Infinity) - (Number(b.preco) || Infinity));
+      $("item-ofertas").innerHTML = ofertas.map((o) => {
+        const melhor = resumo && ofertas.length > 1 && o === ofertas[0];
+        const loja = o.link ? `<a href="${escapar(o.link)}" target="_blank" rel="noopener">${escapar(o.loja)} ↗</a>` : escapar(o.loja);
+        return `<div class="oferta${melhor ? " melhor" : ""}">
+          <div class="oferta-loja">${loja}
+            ${melhor ? '<span class="melhor-selo">mais barato</span>' : ""}
+            ${o.promocao ? '<span class="promo">promoção</span>' : ""}
+            <div class="item-detalhe">anotada em ${dataBr(o.data)}${o.por ? " por " + escapar(nomeDe(o.por)) : ""}</div>
+          </div>
+          <span class="oferta-preco">${reais(o.preco)}</span>
+          <button type="button" class="comprei" data-comprei-oferta="${o.indice}">Comprei aqui</button>
+          <button type="button" class="remover" data-remover-oferta="${o.indice}" aria-label="Remover oferta">×</button>
+        </div>`;
+      }).join("");
+      if (resumo && resumo.economia > 0) {
+        $("item-ofertas").insertAdjacentHTML("beforeend",
+          `<p class="item-detalhe economia" style="margin: 6px 0 0">Economia de ${reais(resumo.economia)} comprando em ${escapar(resumo.melhor.loja)} em vez de ${escapar(resumo.pior.loja)}.</p>`);
+      }
+    }
+
+    async function adicionarOferta() {
+      if (!itemAberto) return;
+      const loja = $("oferta-loja").value.trim();
+      const preco = Number($("oferta-preco").value);
+      const link = $("oferta-link").value.trim();
+      if (!loja || !(preco > 0)) {
+        $("oferta-erro").textContent = "Informe a loja e o preço.";
+        return;
+      }
+      $("oferta-erro").textContent = "";
+      const nova = {
+        loja,
+        preco,
+        link: /^https?:\/\//i.test(link) ? link : "",
+        promocao: $("oferta-promo").checked,
+        data: hojeIso(),
+        por: usuario.email,
+      };
+      await updateDoc(doc(db, "itens", itemAberto.id), {
+        ofertas: [...(itemAberto.ofertas || []), nova],
+        atualizadoEm: serverTimestamp(),
+      });
+      $("oferta-loja").value = "";
+      $("oferta-preco").value = "";
+      $("oferta-link").value = "";
+      $("oferta-promo").checked = false;
+    }
+
+    // Preenche a seção Compra com a oferta escolhida; o usuário confere e toca em Salvar.
+    function preencherComOferta(indice) {
+      const oferta = (itemAberto.ofertas || [])[indice];
+      if (!oferta) return;
+      const sugerida = Number($("item-sugerida").value) || 1;
+      contagemAberta = Math.max(contagemAberta, sugerida);
+      atualizarContagem();
+      $("item-preco").value = Number(oferta.preco).toFixed(2);
+      if (!$("item-quem").value) $("item-quem").value = usuario.email;
+      if (oferta.link && !$("item-link").value) $("item-link").value = oferta.link;
+      const aviso = $("item-aviso");
+      aviso.textContent = `Preenchido com a oferta da ${oferta.loja}. Confira o valor (o total pago, se comprou mais de uma unidade) e toque em Salvar.`;
+      aviso.classList.remove("oculto");
+      $("bloco-quantidade").scrollIntoView({ behavior: "smooth", block: "start" });
+      $("item-preco").focus({ preventScroll: true });
+    }
+
+    async function removerOferta(indice) {
+      if (!itemAberto || !confirm("Remover esta oferta?")) return;
+      const ofertas = (itemAberto.ofertas || []).filter((_, i) => i !== indice);
+      await updateDoc(doc(db, "itens", itemAberto.id), { ofertas, atualizadoEm: serverTimestamp() });
+    }
+
+    function desenharResumo() {
+      const gasto = totalGasto(itens);
+      const orcamento = Number(familia.orcamento) || 0;
+      const geral = progresso(itens);
+      const essenciaisFaltando = itens.filter((i) => i.prioridade === "essencial" && !itemCompleto(i)).length;
+      const presentes = itens.filter((i) => i.compradoPor === "presente").length;
+
+      const porCategoria = {};
+      const porPessoa = {};
+      itens.forEach((i) => {
+        const valor = Number(i.preco) || 0;
+        if (valor) porCategoria[i.categoria] = (porCategoria[i.categoria] || 0) + valor;
+        if (valor && i.compradoPor && i.compradoPor !== "presente") {
+          porPessoa[i.compradoPor] = (porPessoa[i.compradoPor] || 0) + valor;
+        }
+      });
+
+      const pctOrcamento = orcamento ? Math.min(100, Math.round((gasto / orcamento) * 100)) : 0;
+      const linhas = (mapa, rotulo) => Object.entries(mapa).sort((a, b) => b[1] - a[1])
+        .map(([chave, valor]) => `<div class="linha-resumo"><span>${escapar(rotulo(chave))}</span><strong>${reais(valor)}</strong></div>`).join("")
+        || '<div class="subtitulo" style="margin: 0">Nenhum valor registrado ainda.</div>';
+
+      $("conteudo-resumo").innerHTML = `
+        <div class="cartao">
+          <div class="subtitulo" style="margin: 0">Gasto até agora</div>
+          <div class="numero-grande">${reais(gasto)}</div>
+          ${orcamento ? `<div class="subtitulo" style="margin: 4px 0 0">de ${reais(orcamento)} de orçamento ${gasto > orcamento ? "· passou do orçamento" : `· restam ${reais(orcamento - gasto)}`}</div>
+            <div class="barra${gasto > orcamento ? " estourou" : ""}"><div style="width: ${pctOrcamento}%"></div></div>`
+            : '<div class="subtitulo" style="margin: 4px 0 0">Defina um orçamento em Ajustes.</div>'}
+        </div>
+        <div class="cartao">
+          <div class="subtitulo" style="margin: 0">Progresso geral</div>
+          <div class="numero-grande">${geral.pct}%</div>
+          <div class="subtitulo" style="margin: 4px 0 0">${geral.completos} de ${geral.total} itens · ${essenciaisFaltando} essenciais faltando · ${presentes} presentes</div>
+          <div class="barra"><div style="width: ${geral.pct}%"></div></div>
+        </div>
+        <div class="cartao"><h2>Por categoria</h2>${linhas(porCategoria, (c) => c)}</div>
+        <div class="cartao"><h2>Quem pagou</h2>${linhas(porPessoa, nomeDe)}</div>`;
+    }
+
+    // ---------- Diálogo do item ----------
+
+    function opcoesQuemComprou(atual) {
+      const pessoas = new Set(Object.keys(familia.nomes || {}));
+      if (usuario) pessoas.add(usuario.email);
+      if (atual && atual !== "presente") pessoas.add(atual);
+      return ['<option value="">—</option>',
+        ...[...pessoas].map((email) => `<option value="${escapar(email)}">${escapar(nomeDe(email))}</option>`),
+        '<option value="presente">Presente 🎁</option>'].join("");
+    }
+
+    function atualizarContagem() {
+      const sugerida = Number($("item-sugerida").value) || 1;
+      $("item-contagem").textContent = `${contagemAberta} de ${sugerida}`;
+    }
+
+    function abrirItem(id) {
+      const item = itens.find((i) => i.id === id);
+      if (!item) return;
+      itemAberto = item;
+      contagemAberta = item.quantidadeComprada || 0;
+      $("item-nome").value = item.nome;
+      $("item-sugerida").value = item.quantidadeSugerida || 1;
+      $("item-preco").value = item.preco || "";
+      $("item-feito").checked = !!item.feito;
+      $("item-quem").innerHTML = opcoesQuemComprou(item.compradoPor);
+      $("item-quem").value = item.compradoPor || "";
+      $("item-link").value = item.link || "";
+      $("item-obs").value = item.obs || "";
+      $("item-dica").textContent = item.dica ? "💡 " + item.dica : "";
+      $("item-dica").classList.toggle("oculto", !item.dica);
+      $("bloco-quantidade").classList.toggle("oculto", !!item.tarefa);
+      $("rotulo-sugerida").classList.toggle("oculto", !!item.tarefa);
+      $("item-sugerida").classList.toggle("oculto", !!item.tarefa);
+      $("item-aviso").classList.add("oculto");
+      $("bloco-tarefa").classList.toggle("oculto", !item.tarefa);
+      const abrir = $("item-link-abrir");
+      if (item.link && /^https?:\/\//i.test(item.link)) {
+        abrir.innerHTML = `<a href="${escapar(item.link)}" target="_blank" rel="noopener">Abrir link da loja ↗</a>`;
+        abrir.classList.remove("oculto");
+      } else {
+        abrir.classList.add("oculto");
+      }
+      $("bloco-ofertas").classList.toggle("oculto", !!item.tarefa);
+      $("item-links-busca").innerHTML = linksDeBusca(item.nome).map((l) =>
+        `<a href="${escapar(l.url)}" target="_blank" rel="noopener">${escapar(l.loja)} ↗</a>`).join("");
+      $("oferta-loja").value = "";
+      $("oferta-preco").value = "";
+      $("oferta-link").value = "";
+      $("oferta-promo").checked = false;
+      $("oferta-erro").textContent = "";
+      desenharOfertasDoItem();
+      atualizarContagem();
+      $("dialogo-item").showModal();
+    }
+
+    $("item-menos").onclick = () => { contagemAberta = Math.max(0, contagemAberta - 1); atualizarContagem(); };
+    $("item-mais").onclick = () => { contagemAberta += 1; atualizarContagem(); };
+    $("item-sugerida").oninput = atualizarContagem;
+    $("item-fechar").onclick = () => $("dialogo-item").close();
+
+    $("form-item").onsubmit = async (evento) => {
+      evento.preventDefault();
+      if (!itemAberto) return;
+      const link = $("item-link").value.trim();
+      const mudancas = {
+        nome: $("item-nome").value.trim() || itemAberto.nome,
+        compradoPor: $("item-quem").value,
+        link: /^https?:\/\//i.test(link) ? link : "",
+        obs: $("item-obs").value.trim(),
+        atualizadoEm: serverTimestamp(),
+      };
+      if (itemAberto.tarefa) {
+        mudancas.feito = $("item-feito").checked;
+      } else {
+        mudancas.quantidadeSugerida = Math.max(1, Number($("item-sugerida").value) || 1);
+        mudancas.quantidadeComprada = contagemAberta;
+        mudancas.preco = Math.max(0, Number($("item-preco").value) || 0);
+      }
+      await updateDoc(doc(db, "itens", itemAberto.id), mudancas);
+      $("dialogo-item").close();
+    };
+
+    $("item-apagar").onclick = async () => {
+      if (!itemAberto || !confirm(`Apagar "${itemAberto.nome}" da lista?`)) return;
+      await deleteDoc(doc(db, "itens", itemAberto.id));
+      $("dialogo-item").close();
+    };
+
+    // "toggle" não sobe pela árvore, por isso o ouvinte usa a fase de captura.
+    document.addEventListener("toggle", (evento) => {
+      const fase = evento.target.dataset && evento.target.dataset.fase;
+      if (!fase || fasesAbertas === null) return;
+      if (evento.target.open) fasesAbertas.add(fase);
+      else fasesAbertas.delete(fase);
+    }, true);
+
+    // Um único ouvinte para todos os itens desenhados (trilha e lista).
+    document.addEventListener("click", (evento) => {
+      if (evento.target.closest("a")) return;
+      const comprei = evento.target.closest("[data-comprei-oferta]");
+      if (comprei) {
+        preencherComOferta(Number(comprei.dataset.compreiOferta));
+        return;
+      }
+      const remover = evento.target.closest("[data-remover-oferta]");
+      if (remover) {
+        removerOferta(Number(remover.dataset.removerOferta));
+        return;
+      }
+      const marcador = evento.target.closest("[data-marcar]");
+      if (marcador) {
+        evento.preventDefault();
+        evento.stopPropagation();
+        const item = itens.find((i) => i.id === marcador.dataset.marcar);
+        if (item) alternarItem(item);
+        return;
+      }
+      const card = evento.target.closest("[data-abrir]");
+      if (card) {
+        abrirItem(card.dataset.abrir);
+        return;
+      }
+      const linha = evento.target.closest(".item[data-id]");
+      if (linha) abrirItem(linha.dataset.id);
+    });
+
+    // ---------- Ajustes ----------
+
+    function preencherAjustes() {
+      if (document.activeElement && $("form-ajustes").contains(document.activeElement)) return;
+      $("ajuste-dpp").value = familia.dpp || "";
+      $("ajuste-orcamento").value = familia.orcamento || "";
+      $("ajuste-nome").value = usuario ? ((familia.nomes || {})[usuario.email] || "") : "";
+    }
+
+    $("form-ajustes").onsubmit = async (evento) => {
+      evento.preventDefault();
+      const dados = {
+        dpp: $("ajuste-dpp").value,
+        orcamento: Math.max(0, Number($("ajuste-orcamento").value) || 0),
+      };
+      const nome = $("ajuste-nome").value.trim();
+      if (nome) dados.nomes = { [usuario.email]: nome };
+      await setDoc(docFamilia, dados, { merge: true });
+      $("ajustes-msg").textContent = "Salvo!";
+      setTimeout(() => { $("ajustes-msg").textContent = ""; }, 2500);
+    };
+
+    $("novo-categoria").innerHTML = CATEGORIAS.map((c) => `<option>${escapar(c)}</option>`).join("");
+    $("novo-fase").innerHTML = FASES.map((f) => `<option value="${f.id}">${escapar(f.nome)}</option>`).join("");
+
+    $("form-novo").onsubmit = async (evento) => {
+      evento.preventDefault();
+      const nome = $("novo-nome").value.trim();
+      if (!nome) return;
+      await addDoc(colecaoItens, {
+        nome,
+        categoria: $("novo-categoria").value,
+        fase: $("novo-fase").value,
+        prioridade: $("novo-prioridade").value,
+        tarefa: false,
+        quantidadeSugerida: Math.max(1, Number($("novo-quantidade").value) || 1),
+        quantidadeComprada: 0,
+        unidade: "",
+        feito: false,
+        preco: 0,
+        compradoPor: "",
+        link: "",
+        obs: "",
+        dica: "",
+        padrao: false,
+        ordem: 999,
+        atualizadoEm: serverTimestamp(),
+      });
+      $("novo-nome").value = "";
+      $("novo-quantidade").value = 1;
+      mostrarAba("trilha");
+    };
+
+    // ---------- Abas ----------
+
+    function mostrarAba(qual) {
+      ["trilha", "lista", "comprar", "resumo", "ajustes"].forEach((aba) => {
+        $("aba-" + aba).classList.toggle("oculto", aba !== qual);
+      });
+      document.querySelectorAll("nav button").forEach((b) => b.classList.toggle("ativa", b.dataset.aba === qual));
+      window.scrollTo(0, 0);
+    }
+
+    document.querySelectorAll("nav button").forEach((b) => { b.onclick = () => mostrarAba(b.dataset.aba); });
+    $("filtro-status").onchange = desenharLista;
+    $("filtro-prioridade").onchange = desenharLista;
+    $("filtro-comprar").onchange = desenharComprar;
+    $("busca-comprar").oninput = desenharComprar;
+    $("oferta-adicionar").onclick = adicionarOferta;
+    // Enter num campo da oferta anota a oferta em vez de salvar e fechar o item.
+    $("bloco-ofertas").addEventListener("keydown", (evento) => {
+      if (evento.key === "Enter" && evento.target.tagName === "INPUT") {
+        evento.preventDefault();
+        adicionarOferta();
+      }
+    });
+  </script>
+</body>
+</html>

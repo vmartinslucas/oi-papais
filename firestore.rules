@@ -1,0 +1,26 @@
+rules_version = '2';
+
+// Regras de segurança do banco de dados.
+// Só quem fez login com um dos e-mails da lista pode ver e mudar o enxoval.
+//
+// Este arquivo é só um modelo: os e-mails de verdade ficam apenas no
+// console do Firebase (Firestore > Regras), para não aparecerem no GitHub.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function temAcesso() {
+      return request.auth != null
+        && request.auth.token.email in [
+          'seu-email@gmail.com',
+          'email-da-esposa@gmail.com'
+        ];
+    }
+
+    match /itens/{item} {
+      allow read, write: if temAcesso();
+    }
+
+    match /config/{doc} {
+      allow read, write: if temAcesso();
+    }
+  }
+}
